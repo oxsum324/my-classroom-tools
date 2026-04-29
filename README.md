@@ -4,10 +4,14 @@
 
 ## 入口
 
-- GitHub Pages：建立後啟用
+- GitHub Pages：https://oxsum324.github.io/my-classroom-tools/
 - 工具目錄：`tools/`
 - 專案藍圖：`AGENTS.md`
 - Obsidian 工作筆記：`my-classroom-tools/工作筆記.md`
+
+## 工具
+
+- [座標獵人](https://oxsum324.github.io/my-classroom-tools/tools/coordinate-hunter/)
 
 ## 原則
 

@@ -43,7 +43,7 @@ powershell -ExecutionPolicy Bypass -File "$HOME/codex-tools/shutdown.ps1" "<今�
 
 ## 工具清單
 
-- （尚無）
+- `tools/coordinate-hunter/`：座標獵人，座標平面找點與讀點練習。
 
 ## 工作注意事項
 

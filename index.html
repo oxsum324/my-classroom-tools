@@ -66,6 +66,23 @@
       color: var(--muted);
       font-style: italic;
     }
+    .tool-list {
+      display: grid;
+      gap: 10px;
+    }
+    .tool-item {
+      display: grid;
+      gap: 4px;
+      padding: 12px 0;
+    }
+    .tool-title {
+      font-weight: 800;
+      font-size: 1.08rem;
+    }
+    .tool-meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
     a {
       color: var(--blue);
       text-decoration-thickness: 1px;
@@ -100,7 +117,12 @@
     <section class="board" aria-label="專案狀態">
       <div class="row">
         <div class="label">工具清單</div>
-        <div class="empty">尚未加入工具</div>
+        <div class="tool-list">
+          <div class="tool-item">
+            <a class="tool-title" href="./tools/coordinate-hunter/">座標獵人</a>
+            <div class="tool-meta">座標平面找點與讀點練習</div>
+          </div>
+        </div>
       </div>
       <div class="row">
         <div class="label">工作模式</div>

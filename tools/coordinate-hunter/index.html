@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>座標獵人</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202124;
+      --muted: #5f6368;
+      --line: #d7dce3;
+      --paper: #ffffff;
+      --wash: #f6f8fb;
+      --panel: #eef3f8;
+      --axis: #202124;
+      --grid: #c8d1dc;
+      --blue: #1a73e8;
+      --green: #16845b;
+      --red: #c5221f;
+      --amber: #f29900;
+      --shadow: 0 18px 42px rgba(32, 33, 36, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--wash);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .select-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    select, input[type="number"] {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 0 10px;
+    }
+
+    .btn {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 0 12px;
+      font-weight: 650;
+    }
+
+    .btn.primary {
+      border-color: #1558b0;
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn:focus-visible,
+    .segmented button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(26, 115, 232, 0.24);
+      outline-offset: 2px;
+    }
+
+    .workspace {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .game-surface,
+    .side {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .game-surface {
+      padding: 14px;
+      min-width: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .plane-frame {
+      position: relative;
+      width: min(100%, 72vh, 740px);
+      aspect-ratio: 1 / 1;
+      min-height: 300px;
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .side {
+      overflow: hidden;
+    }
+
+    .panel-section {
+      padding: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .panel-section:first-child {
+      border-top: 0;
+    }
+
+    .target-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .target {
+      font-size: clamp(2.2rem, 10vw, 4.2rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .target.marked {
+      color: var(--blue);
+    }
+
+    .feedback {
+      min-height: 28px;
+      font-weight: 700;
+    }
+
+    .feedback.ok { color: var(--green); }
+    .feedback.bad { color: var(--red); }
+    .feedback.neutral { color: var(--muted); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfe;
+      min-width: 0;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 650;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+      font-size: 1.35rem;
+      line-height: 1.1;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      padding: 4px;
+      background: #eef1f5;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .segmented button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .segmented button.active {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(32, 33, 36, 0.14);
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .answer-grid label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    .answer-grid input {
+      width: 100%;
+    }
+
+    .answer-actions {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fbfcfe;
+      color: var(--ink);
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        position: static;
+      }
+
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+        width: min(100% - 20px, 760px);
+      }
+
+      .side {
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .brand {
+        display: grid;
+        gap: 3px;
+      }
+
+      .status-line {
+        white-space: normal;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .select-wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .toolbar .btn,
+      .toolbar select {
+        width: 100%;
+      }
+
+      .game-surface {
+        padding: 8px;
+      }
+
+      .plane-frame {
+        min-height: auto;
+      }
+
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .stat {
+        padding: 8px 6px;
+      }
+
+      .stat-value {
+        font-size: 1.05rem;
+      }
+
+      .stat-label {
+        font-size: 0.76rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <h1>座標獵人</h1>
+          <div class="status-line" id="statusLine">第 1 題</div>
+        </div>
+        <div class="toolbar">
+          <label class="select-wrap">
+            範圍
+            <select id="rangeSelect">
+              <option value="4">-4 到 4</option>
+              <option value="6" selected>-6 到 6</option>
+              <option value="10">-10 到 10</option>
+            </select>
+          </label>
+          <label class="select-wrap">
+            題數
+            <select id="roundSelect">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="30">30</option>
+            </select>
+          </label>
+          <button class="btn" id="resetBtn" type="button">重設</button>
+          <button class="btn primary" id="nextBtn" type="button">下一題</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="game-surface" aria-label="座標平面">
+        <div class="plane-frame">
+          <canvas id="plane" aria-label="互動座標平面"></canvas>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel-section target-card">
+          <div class="segmented" role="tablist" aria-label="練習模式">
+            <button type="button" class="active" data-mode="locate">找座標</button>
+            <button type="button" data-mode="read">讀座標</button>
+          </div>
+          <div>
+            <div class="eyebrow" id="targetLabel">目標座標</div>
+            <div class="target" id="targetText">(0, 0)</div>
+          </div>
+          <div class="feedback neutral" id="feedback">準備開始</div>
+          <div id="answerBox" hidden>
+            <div class="answer-grid">
+              <label>
+                x
+                <input id="answerX" type="number" inputmode="numeric" step="1">
+              </label>
+              <label>
+                y
+                <input id="answerY" type="number" inputmode="numeric" step="1">
+              </label>
+            </div>
+            <div class="answer-actions">
+              <button class="btn primary" id="submitAnswerBtn" type="button">送出</button>
+              <button class="btn" id="clearAnswerBtn" type="button">清空</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">分數</div>
+              <div class="stat-value" id="scoreText">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">連擊</div>
+              <div class="stat-value" id="streakText">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">進度</div>
+              <div class="stat-value" id="roundText">1/20</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">最佳</div>
+              <div class="stat-value" id="bestText">0</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="eyebrow">最近</div>
+          <div class="history" id="historyList"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.querySelector("#plane");
+    const ctx = canvas.getContext("2d");
+    const rangeSelect = document.querySelector("#rangeSelect");
+    const roundSelect = document.querySelector("#roundSelect");
+    const statusLine = document.querySelector("#statusLine");
+    const targetLabel = document.querySelector("#targetLabel");
+    const targetText = document.querySelector("#targetText");
+    const feedback = document.querySelector("#feedback");
+    const answerBox = document.querySelector("#answerBox");
+    const answerX = document.querySelector("#answerX");
+    const answerY = document.querySelector("#answerY");
+    const scoreText = document.querySelector("#scoreText");
+    const streakText = document.querySelector("#streakText");
+    const roundText = document.querySelector("#roundText");
+    const bestText = document.querySelector("#bestText");
+    const historyList = document.querySelector("#historyList");
+    const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+
+    const state = {
+      range: 6,
+      totalRounds: 20,
+      round: 1,
+      score: 0,
+      streak: 0,
+      best: Number(localStorage.getItem("coordinateHunterBest") || 0),
+      mode: "locate",
+      target: { x: 0, y: 0 },
+      selected: null,
+      history: [],
+      locked: false
+    };
+
+    let metrics = null;
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randomPoint() {
+      let point = { x: randomInt(-state.range, state.range), y: randomInt(-state.range, state.range) };
+      while (point.x === 0 && point.y === 0) {
+        point = { x: randomInt(-state.range, state.range), y: randomInt(-state.range, state.range) };
+      }
+      return point;
+    }
+
+    function pointText(point) {
+      return `(${point.x}, ${point.y})`;
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function getMetrics() {
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const pad = Math.max(30, Math.min(52, size * 0.085));
+      const grid = size - pad * 2;
+      const step = grid / (state.range * 2);
+      return {
+        width: rect.width,
+        height: rect.height,
+        pad,
+        grid,
+        step,
+        originX: rect.width / 2,
+        originY: rect.height / 2
+      };
+    }
+
+    function toPixel(point) {
+      return {
+        x: metrics.originX + point.x * metrics.step,
+        y: metrics.originY - point.y * metrics.step
+      };
+    }
+
+    function fromPixel(x, y) {
+      const gx = Math.round((x - metrics.originX) / metrics.step);
+      const gy = Math.round((metrics.originY - y) / metrics.step);
+      if (gx < -state.range || gx > state.range || gy < -state.range || gy > state.range) {
+        return null;
+      }
+      return { x: gx, y: gy };
+    }
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, metrics.width, metrics.height);
+      ctx.fillStyle = "#eef3f8";
+      ctx.fillRect(0, 0, metrics.width, metrics.height);
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#c8d1dc";
+      for (let i = -state.range; i <= state.range; i += 1) {
+        const x = metrics.originX + i * metrics.step;
+        const y = metrics.originY - i * metrics.step;
+        ctx.beginPath();
+        ctx.moveTo(x, metrics.originY - state.range * metrics.step);
+        ctx.lineTo(x, metrics.originY + state.range * metrics.step);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(metrics.originX - state.range * metrics.step, y);
+        ctx.lineTo(metrics.originX + state.range * metrics.step, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#202124";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(metrics.originX - state.range * metrics.step, metrics.originY);
+      ctx.lineTo(metrics.originX + state.range * metrics.step, metrics.originY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(metrics.originX, metrics.originY + state.range * metrics.step);
+      ctx.lineTo(metrics.originX, metrics.originY - state.range * metrics.step);
+      ctx.stroke();
+
+      ctx.fillStyle = "#4f5661";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const labelEvery = state.range > 6 ? 2 : 1;
+      for (let i = -state.range; i <= state.range; i += labelEvery) {
+        if (i !== 0) {
+          const xp = metrics.originX + i * metrics.step;
+          const yp = metrics.originY - i * metrics.step;
+          ctx.fillText(String(i), xp, metrics.originY + 18);
+          ctx.fillText(String(i), metrics.originX - 18, yp);
+        }
+      }
+      ctx.fillText("0", metrics.originX - 15, metrics.originY + 17);
+      ctx.fillStyle = "#202124";
+      ctx.font = "700 13px system-ui, sans-serif";
+      ctx.fillText("x", metrics.originX + state.range * metrics.step + 18, metrics.originY + 1);
+      ctx.fillText("y", metrics.originX - 1, metrics.originY - state.range * metrics.step - 18);
+    }
+
+    function drawPoint(point, color, radius, ring) {
+      const p = toPixel(point);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      if (ring) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = ring;
+        ctx.stroke();
+      }
+    }
+
+    function draw() {
+      metrics = getMetrics();
+      drawGrid();
+
+      if (state.mode === "read") {
+        drawPoint(state.target, "#1a73e8", 8, "#ffffff");
+      }
+
+      if (state.selected) {
+        const isCorrect = state.selected.x === state.target.x && state.selected.y === state.target.y;
+        drawPoint(state.selected, isCorrect ? "#16845b" : "#c5221f", 7, "#ffffff");
+      }
+    }
+
+    function setFeedback(text, kind) {
+      feedback.textContent = text;
+      feedback.className = `feedback ${kind}`;
+    }
+
+    function updateUi() {
+      targetLabel.textContent = state.mode === "locate" ? "目標座標" : "標記座標";
+      targetText.textContent = state.mode === "locate" ? pointText(state.target) : "?";
+      targetText.classList.toggle("marked", state.mode === "read");
+      answerBox.hidden = state.mode !== "read";
+      scoreText.textContent = String(state.score);
+      streakText.textContent = String(state.streak);
+      roundText.textContent = `${state.round}/${state.totalRounds}`;
+      bestText.textContent = String(state.best);
+      statusLine.textContent = `第 ${state.round} 題`;
+      modeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === state.mode);
+      });
+      historyList.innerHTML = "";
+      if (state.history.length === 0) {
+        const row = document.createElement("div");
+        row.className = "history-row";
+        row.innerHTML = '<span class="pill">--</span><span>尚無紀錄</span>';
+        historyList.append(row);
+      } else {
+        state.history.slice(0, 5).forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "history-row";
+          row.innerHTML = `<span class="pill">${item.ok ? "OK" : "NO"}</span><span>${item.text}</span>`;
+          historyList.append(row);
+        });
+      }
+      draw();
+    }
+
+    function startRound(keepRound) {
+      state.target = randomPoint();
+      state.selected = null;
+      state.locked = false;
+      answerX.value = "";
+      answerY.value = "";
+      if (!keepRound && state.round < state.totalRounds) {
+        state.round += 1;
+      }
+      setFeedback(state.mode === "locate" ? "找出目標" : "讀取標記", "neutral");
+      updateUi();
+    }
+
+    function completeRound() {
+      state.score += 10 + Math.min(10, state.streak * 2);
+      state.streak += 1;
+      state.best = Math.max(state.best, state.score);
+      localStorage.setItem("coordinateHunterBest", String(state.best));
+      state.history.unshift({ ok: true, text: `${pointText(state.target)} 正確` });
+      setFeedback("正確", "ok");
+      updateUi();
+      state.locked = true;
+      window.setTimeout(() => {
+        if (state.round >= state.totalRounds) {
+          setFeedback(`完成 ${state.totalRounds} 題`, "ok");
+          state.locked = false;
+          updateUi();
+          return;
+        }
+        startRound(false);
+      }, 650);
+    }
+
+    function missRound(point) {
+      state.score = Math.max(0, state.score - 2);
+      state.streak = 0;
+      const text = point ? `${pointText(point)} 不是目標` : "答案不符";
+      state.history.unshift({ ok: false, text });
+      setFeedback("再試一次", "bad");
+      updateUi();
+    }
+
+    function handleCanvasPointer(event) {
+      if (state.mode !== "locate" || state.locked) return;
+      const rect = canvas.getBoundingClientRect();
+      const point = fromPixel(event.clientX - rect.left, event.clientY - rect.top);
+      if (!point) return;
+      state.selected = point;
+      if (point.x === state.target.x && point.y === state.target.y) {
+        completeRound();
+      } else {
+        missRound(point);
+      }
+    }
+
+    function submitReadAnswer() {
+      if (state.mode !== "read" || state.locked) return;
+      const point = {
+        x: Number(answerX.value),
+        y: Number(answerY.value)
+      };
+      if (!Number.isInteger(point.x) || !Number.isInteger(point.y)) {
+        setFeedback("請輸入整數", "bad");
+        return;
+      }
+      if (point.x === state.target.x && point.y === state.target.y) {
+        completeRound();
+      } else {
+        missRound(point);
+      }
+    }
+
+    function resetGame() {
+      state.range = Number(rangeSelect.value);
+      state.totalRounds = Number(roundSelect.value);
+      state.round = 1;
+      state.score = 0;
+      state.streak = 0;
+      state.history = [];
+      state.selected = null;
+      state.locked = false;
+      state.target = randomPoint();
+      setFeedback(state.mode === "locate" ? "找出目標" : "讀取標記", "neutral");
+      updateUi();
+    }
+
+    canvas.addEventListener("pointerdown", handleCanvasPointer);
+    window.addEventListener("resize", resizeCanvas);
+    document.querySelector("#resetBtn").addEventListener("click", resetGame);
+    document.querySelector("#nextBtn").addEventListener("click", () => {
+      if (state.round >= state.totalRounds) {
+        state.round = 1;
+        state.score = 0;
+        state.streak = 0;
+        state.history = [];
+      }
+      startRound(false);
+    });
+    document.querySelector("#submitAnswerBtn").addEventListener("click", submitReadAnswer);
+    document.querySelector("#clearAnswerBtn").addEventListener("click", () => {
+      answerX.value = "";
+      answerY.value = "";
+      answerX.focus();
+    });
+    answerX.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") answerY.focus();
+    });
+    answerY.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") submitReadAnswer();
+    });
+    rangeSelect.addEventListener("change", resetGame);
+    roundSelect.addEventListener("change", resetGame);
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.mode = button.dataset.mode;
+        resetGame();
+      });
+    });
+
+    state.target = randomPoint();
+    setFeedback("找出目標", "neutral");
+    updateUi();
+    resizeCanvas();
+  </script>
+</body>
+</html>
