@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>my-classroom-tools</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202124;
+      --muted: #5f6368;
+      --line: #dadce0;
+      --paper: #ffffff;
+      --wash: #f8fafd;
+      --accent: #f29900;
+      --blue: #1a73e8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--wash);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+    header {
+      padding: 28px 0 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .board {
+      margin-top: 28px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 20px;
+      padding: 18px 20px;
+      border-top: 1px solid var(--line);
+    }
+    .row:first-child { border-top: 0; }
+    .label {
+      color: var(--muted);
+      font-weight: 650;
+    }
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #fff7e6;
+      color: #8a4b00;
+      border: 1px solid #ffd58a;
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+    @media (max-width: 640px) {
+      main { width: min(100% - 24px, 920px); padding-top: 24px; }
+      .row { grid-template-columns: 1fr; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge">Classroom Tool Hub</span>
+      <h1>my-classroom-tools</h1>
+      <p class="subtitle">班級互動工具的公開入口。每個工具會獨立放在 tools 目錄，完成後從這裡連到學生可用的頁面。</p>
+    </header>
+
+    <section class="board" aria-label="專案狀態">
+      <div class="row">
+        <div class="label">工具清單</div>
+        <div class="empty">尚未加入工具</div>
+      </div>
+      <div class="row">
+        <div class="label">工作模式</div>
+        <div>新增工具、GitHub Pages 上線、Obsidian 工作筆記與 Firebase 資料庫已納入同一個收工流程。</div>
+      </div>
+      <div class="row">
+        <div class="label">資料安全</div>
+        <div>學生資料只使用班級代號與座號，不在前端或 repo 寫入密鑰。</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
