@@ -7,7 +7,7 @@
 ## 工作模式
 
 - **加新工具**：對 Codex 說「我想做一個 XXX 工具」，Codex 會建立 `tools/<工具名>/` 子資料夾，並依班級工具模式開發、測試、上線。
-- **結束工作**：對 Codex 說「收工」，Codex 會更新 Obsidian 工作筆記，並執行 `~/codex-tools/shutdown.sh` 進行 commit + push。
+- **結束工作**：對 Codex 說「收工」，Codex 會更新 Obsidian 工作筆記，並執行 `~/codex-tools/shutdown.ps1` 進行 commit + push。
 - **接續工作**：對 Codex 說「讀工作筆記、告訴我上次做到哪」，Codex 會從 Obsidian 駕駛艙恢復上下文。
 
 ## 工作桌 + 三個家
@@ -29,8 +29,8 @@
    - 「踩坑筆記」記錄新坑與解法。
 4. 執行：
 
-```bash
-bash ~/codex-tools/shutdown.sh "<今天工作摘要>"
+```powershell
+powershell -ExecutionPolicy Bypass -File "$HOME/codex-tools/shutdown.ps1" "<今天工作摘要>"
 ```
 
 5. 回報三方同步狀態。
